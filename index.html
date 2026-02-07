@@ -1,477 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Readathon Racer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #000000;
-            --accent: #3b82f6;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: white;
-            overflow-x: hidden;
-        }
-        h1, h2, button, .font-black { 
-            font-family: 'Inter', sans-serif; 
-            letter-spacing: -0.02em; 
-        }
-        
-        .page { display: none; min-height: 100vh; }
-        .page.active { display: flex; flex-direction: column; }
-        
-        .word-active { 
-            color: #3b82f6; 
-            text-decoration: underline; 
-            text-underline-offset: 4px; 
-            font-weight: 800; 
-            animation: pulse-blue 1.5s infinite;
-        }
-        .word-complete { color: #334155; }
-        
-        .track-lane { 
-            height: 55px; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            position: relative; 
-            display: flex;
-            align-items: center;
-        }
-        .lane-main {
-            position: relative;
-            flex-grow: 1;
-            height: 100%;
-            margin-right: 100px;
-        }
-        .car-container { 
-            position: absolute;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: left 0.1s linear; 
-            transform: translateY(-50%); 
-            top: 50%; 
-            left: 0;
-        }
-        
-        .nametag {
-            font-size: 10px;
-            font-weight: 800;
-            white-space: nowrap;
-            background: rgba(0,0,0,0.5);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .wpm-display-lane {
-            position: absolute;
-            right: 0;
-            width: 70px;
-            text-align: right;
-            font-weight: 900;
-            font-size: 0.875rem;
-        }
-
-        @keyframes pulse-blue {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* Reading Passage Space - Moved background down slightly */
-        #textDisplayArea {
-            visibility: hidden;
-            height: 320px; 
-            overflow: hidden; 
-            position: relative;
-            margin-top: -15px; /* Moved container background down a bit */
-            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-        }
-        #textDisplayArea.visible {
-            visibility: visible;
-        }
-        /* The text itself moved higher */
-        #textContent {
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            will-change: transform;
-            padding-top: 0px; /* Removed top padding to sit higher */
-            margin-top: -10px; /* Explicitly pull the text content up */
-        }
-
-        .result-card {
-            position: relative;
-            overflow: hidden;
-        }
-        .result-progress-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: currentColor;
-            opacity: 0.15;
-            transition: width 0.1s linear; 
-            z-index: 0;
-        }
-        .result-content {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .neon-burn {
-            color: #ff3131;
-            text-shadow: 0 0 5px #ff3131, 0 0 10px #ff3131, 0 0 20px #ff0000;
-            animation: flicker 1.5s infinite alternate;
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; text-shadow: 0 0 2px #ff3131, 0 0 5px #ff3131, 0 0 15px #ff0000; }
-        }
-
-        #countdown {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 12rem;
-            font-weight: 900;
-            z-index: 100;
-            text-shadow: 0 0 40px rgba(59,130,246,0.5);
-            display: none;
-            pointer-events: none;
-        }
-
-        .racer-icon {
-            width: 44px;
-            height: 28px;
-            flex-shrink: 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Readathon Racer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-dark: #000000; --accent: #3b82f6; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: white; overflow-x: hidden; }
+    h1, h2, button, .font-black { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; }
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: flex; flex-direction: column; }
+    .word-active { color: #3b82f6; text-decoration: underline; text-underline-offset: 4px; font-weight: 800; animation: pulse-blue 1.5s infinite; }
+    .word-complete { color: #334155; }
+    .word-wrong { color: #ef4444 !important; text-decoration: underline wavy red 2px; font-weight: 800; animation: pulse-red 1.2s infinite; }
+    .track-lane { height: 55px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; display: flex; align-items: center; }
+    .lane-main { position: relative; flex-grow: 1; height: 100%; margin-right: 100px; }
+    .car-container { position: absolute; display: flex; align-items: center; gap: 12px; transition: left 0.1s linear; transform: translateY(-50%); top: 50%; left: 0; }
+    .nametag { font-size: 10px; font-weight: 800; white-space: nowrap; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; }
+    .wpm-display-lane { position: absolute; right: 0; width: 70px; text-align: right; font-weight: 900; font-size: 0.875rem; }
+    @keyframes pulse-blue { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    /* Reading Passage Space - Moved background down slightly */
+    #textDisplayArea { visibility: hidden; height: 320px; overflow: hidden; position: relative; margin-top: -15px; mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); }
+    #textDisplayArea.visible { visibility: visible; }
+    #textContent { transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform; padding-top: 0px; margin-top: -10px; }
+    .result-card { position: relative; overflow: hidden; }
+    .result-progress-bg { position: absolute; top: 0; left: 0; height: 100%; background: currentColor; opacity: 0.15; transition: width 0.1s linear; z-index: 0; }
+    .result-content { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .neon-burn { color: #ff3131; text-shadow: 0 0 5px #ff3131, 0 0 10px #ff3131, 0 0 20px #ff0000; animation: flicker 1.5s infinite alternate; }
+    @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; text-shadow: 0 0 2px #ff3131, 0 0 5px #ff3131, 0 0 15px #ff0000; } }
+    #countdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; font-weight: 900; z-index: 100; text-shadow: 0 0 40px rgba(59,130,246,0.5); display: none; pointer-events: none; }
+    .racer-icon { width: 44px; height: 28px; flex-shrink: 0; }
+  </style>
 </head>
 <body>
+  <div id="countdown">3</div>
 
-    <div id="countdown">3</div>
+  <!-- Intro Page -->
+  <div id="introPage" class="page active items-center justify-center p-6 text-center">
+    <h1 class="text-7xl font-black mb-12 text-white uppercase tracking-tighter">READATHON RACER</h1>
+    <button onclick="startCountdown()" class="px-12 py-5 bg-white text-black hover:bg-slate-200 rounded-full font-black text-xl transition-all transform hover:scale-105 uppercase tracking-normal"> Play </button>
+  </div>
 
-    <!-- Intro Page -->
-    <div id="introPage" class="page active items-center justify-center p-6 text-center">
-        <h1 class="text-7xl font-black mb-12 text-white uppercase tracking-tighter">READATHON RACER</h1>
-        <button onclick="startCountdown()" class="px-12 py-5 bg-white text-black hover:bg-slate-200 rounded-full font-black text-xl transition-all transform hover:scale-105 uppercase tracking-normal">
-            Play
-        </button>
+  <!-- Game Page -->
+  <div id="gamePage" class="page p-4">
+    <!-- HUD -->
+    <div class="flex justify-between items-start mb-4 px-4">
+      <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-800">
+        <span class="text-[10px] text-slate-500 font-black block uppercase tracking-normal mb-1">Your Speed</span>
+        <div class="flex items-baseline gap-1">
+          <span id="playerWpmCounter" class="text-2xl font-black text-blue-400">0</span>
+          <span class="text-[10px] text-slate-500 font-bold uppercase">WPM</span>
+        </div>
+      </div>
+      <div class="text-right">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white animate-pulse">Racing Live</h2>
+        <div class="flex items-center justify-end gap-2 mt-1">
+          <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+          <span class="text-[10px] text-slate-500 font-bold uppercase tracking-normal">Active Session</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Game Page -->
-    <div id="gamePage" class="page p-4">
-        <!-- HUD -->
-        <div class="flex justify-between items-start mb-4 px-4">
-            <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-800">
-                <span class="text-[10px] text-slate-500 font-black block uppercase tracking-normal mb-1">Your Speed</span>
-                <div class="flex items-baseline gap-1">
-                    <span id="playerWpmCounter" class="text-2xl font-black text-blue-400">0</span>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase">WPM</span>
-                </div>
-            </div>
-
-            <div class="text-right">
-                <h2 class="text-xl font-black uppercase tracking-tighter text-white animate-pulse">Racing Live</h2>
-                <div class="flex items-center justify-end gap-2 mt-1">
-                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-normal">Active Session</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Track -->
-        <div class="bg-slate-900/40 rounded-3xl p-4 border border-slate-800 shadow-2xl mb-4">
-            <div id="lanesContainer" class="space-y-1">
-                <!-- Lanes generated by JS -->
-            </div>
-        </div>
-
-        <!-- Text Display -->
-        <div id="textDisplayArea" class="max-w-5xl mx-auto bg-slate-900/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm relative mb-2">
-            <div id="textContent" class="text-xl leading-relaxed text-slate-300 font-bold select-none text-center">
-                <!-- Text generated by JS -->
-            </div>
-        </div>
-        
-        <div id="micStatusContainer" class="flex items-center justify-center gap-2 mb-4">
-            <div id="micDot" class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-            <span id="micLabel" class="text-[8px] font-black uppercase tracking-normal text-red-500">Microphone: Disabled</span>
-        </div>
-
-        <div class="flex justify-center mt-auto pb-4">
-            <button onclick="testInstantFinish()" class="px-6 py-2 bg-slate-900/50 hover:bg-red-900/30 text-slate-500 hover:text-red-400 border border-slate-800 rounded-lg text-[10px] font-black transition-all uppercase tracking-normal">
-                DEBUG: Skip Race
-            </button>
-        </div>
+    <!-- Track -->
+    <div class="bg-slate-900/40 rounded-3xl p-4 border border-slate-800 shadow-2xl mb-4">
+      <div id="lanesContainer" class="space-y-1">
+        <!-- Lanes generated by JS -->
+      </div>
     </div>
 
-    <!-- Results Page -->
-    <div id="resultsPage" class="page items-center justify-center p-6">
-        <h2 id="resultTitle" class="text-5xl font-black mb-10 text-white tracking-tighter uppercase">Race Results:</h2>
-        <div id="leaderboard" class="w-full max-w-xl space-y-3 mb-8">
-            <!-- Results table -->
-        </div>
-        <button onclick="playAgain()" class="px-10 py-4 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold text-sm border border-slate-700 uppercase tracking-normal">
-            Play Again
-        </button>
+    <!-- Text Display -->
+    <div id="textDisplayArea" class="max-w-5xl mx-auto bg-slate-900/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm relative mb-2">
+      <div id="textContent" class="text-xl leading-relaxed text-slate-300 font-bold select-none text-center">
+        <!-- Text generated by JS -->
+      </div>
     </div>
 
-    <script>
-        const fullPassage = "The pursuit of knowledge is a lifelong journey that requires both curiosity and persistence. As the sun rises over the distant mountain peaks, casting long shadows across the valley, a new day begins for those seeking wisdom. Every book we open and every sentence we read provides a vital bridge to a different world, allowing us to understand perspectives far beyond our own narrow experiences. In this fast-paced digital age, taking a moment to focus on the written word is a radical act of presence. It challenges our minds to slow down, to think deeply about complex ideas, and to appreciate the intricate nuances of language. Whether we are exploring the mysteries of the deep ocean or the vast reaches of outer space, literature remains our most powerful tool for discovery. Let us continue this race toward enlightenment, one word at a time, until we reach the final destination of understanding.";
-        const words = fullPassage.split(" ");
-        
-        let currentWordIndex = 0;
-        let startTime = null;
-        let isRacing = false;
-        let hasPlayerFinished = false;
-        let playerFinalWpm = 0;
-        let gameLoopReq;
-        
-        let lastUiUpdateTime = 0;
-        const UI_UPDATE_INTERVAL = 250;
+    <div id="micStatusContainer" class="flex items-center justify-center gap-2 mb-4">
+      <div id="micDot" class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+      <span id="micLabel" class="text-[8px] font-black uppercase tracking-normal text-red-500">Microphone: Disabled</span>
+    </div>
 
-        const fullBotRoster = Array.from({ length: 10 }, (_, i) => `Bot ${i + 1}`);
-        let bots = [];
+    <div class="flex justify-center mt-auto pb-4">
+      <button onclick="testInstantFinish()" class="px-6 py-2 bg-slate-900/50 hover:bg-red-900/30 text-slate-500 hover:text-red-400 border border-slate-800 rounded-lg text-[10px] font-black transition-all uppercase tracking-normal"> DEBUG: Skip Race </button>
+    </div>
+  </div>
 
-        const CAR_SVG = `<svg class="racer-icon" viewBox="0 0 48 24" fill="currentColor"><path d="M42 16H6c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2h3c.5-1.5 2-4 6-5h12c4 1 5.5 3.5 6 5h7c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2zM12 19c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3zm24 0c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>`;
-        const ROCKET_SVG = `<svg class="racer-icon" viewBox="0 0 48 24" fill="currentColor"><path d="M42 12c0-2-6-5-14-5h-10c-3 0-6 2-6 5s3 5 6 5h10c8 0 14-3 14-5zM6 9l4 3-4 3c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2zM18 5l-2 2h4l-2-2zm0 14l-2-2h4l-2 2z"/></svg>`;
+  <!-- Results Page -->
+  <div id="resultsPage" class="page items-center justify-center p-6">
+    <h2 id="resultTitle" class="text-5xl font-black mb-10 text-white tracking-tighter uppercase">Race Results:</h2>
+    <div id="leaderboard" class="w-full max-w-xl space-y-3 mb-8">
+      <!-- Results table -->
+    </div>
+    <button onclick="playAgain()" class="px-10 py-4 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold text-sm border border-slate-700 uppercase tracking-normal"> Play Again </button>
+  </div>
 
-        function setupRaceRoster() {
-            let selectedBotNames = [...fullBotRoster].sort(() => 0.5 - Math.random()).slice(0, 4);
-            if (Math.random() < 0.05) {
-                if (selectedBotNames.length > 3) selectedBotNames.pop();
-                selectedBotNames.push("Ron-Tron");
-            }
-            
-            bots = selectedBotNames.map((name, index) => {
-                let rangeMin = 215;
-                let rangeMax = 245;
-                let color = '#64748b';
-                
-                if (name === "Ron-Tron") { 
-                    rangeMin = 265; 
-                    rangeMax = 345; 
-                    color = '#f43f5e'; 
-                }
+  <script>
+    const fullPassage = "The pursuit of knowledge is a lifelong journey that requires both curiosity and persistence. As the sun rises over the distant mountain peaks, casting long shadows across the valley, a new day begins for those seeking wisdom. Every book we open and every sentence we read provides a vital bridge to a different world, allowing us to understand perspectives far beyond our own narrow experiences. In this fast-paced digital age, taking a moment to focus on the written word is a radical act of presence. It challenges our minds to slow down, to think deeply about complex ideas, and to appreciate the intricate nuances of language. Whether we are exploring the mysteries of the deep ocean or the vast reaches of outer space, literature remains our most powerful tool for discovery. Let us continue this race toward enlightenment, one word at a time, until we reach the final destination of understanding.";
+    const words = fullPassage.split(" ");
+    let currentWordIndex = 0;
+    let startTime = null;
+    let isRacing = false;
+    let hasPlayerFinished = false;
+    let playerFinalWpm = 0;
+    let gameLoopReq;
+    let lastUiUpdateTime = 0;
+    const UI_UPDATE_INTERVAL = 250;
+    const fullBotRoster = Array.from({ length: 10 }, (_, i) => `Bot ${i + 1}`);
+    let bots = [];
+    const CAR_SVG = `<svg class="racer-icon" viewBox="0 0 48 24" fill="currentColor"><path d="M42 16H6c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2h3c.5-1.5 2-4 6-5h12c4 1 5.5 3.5 6 5h7c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2zM12 19c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3zm24 0c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>`;
+    const ROCKET_SVG = `<svg class="racer-icon" viewBox="0 0 48 24" fill="currentColor"><path d="M42 12c0-2-6-5-14-5h-10c-3 0-6 2-6 5s3 5 6 5h10c8 0 14-3 14-5zM6 9l4 3-4 3c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2zM18 5l-2 2h4l-2-2zm0 14l-2-2h4l-2 2z"/></svg>`;
 
-                return {
-                    id: index + 1,
-                    name: name,
-                    color: color, 
-                    progress: 0,
-                    targetWpm: rangeMin + Math.random() * (rangeMax - rangeMin),
-                    currentLiveWpm: 0,
-                    startTime: null,
-                    finished: false,
-                    isRonTron: name === "Ron-Tron"
-                };
-            });
-        }
-
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        function updateMicIndicator(active) {
-            const dot = document.getElementById('micDot');
-            const label = document.getElementById('micLabel');
-            if (active) {
-                dot.classList.replace('bg-red-500', 'bg-green-500');
-                dot.classList.add('animate-ping');
-                label.innerText = 'Microphone: Active';
-                label.classList.replace('text-red-500', 'text-green-500');
-            } else {
-                dot.classList.replace('bg-green-500', 'bg-red-500');
-                dot.classList.remove('animate-ping');
-                label.innerText = 'Microphone: Disabled';
-                label.classList.replace('text-green-500', 'text-red-500');
-            }
-        }
-
-        recognition.onstart = () => updateMicIndicator(true);
-        recognition.onend = () => {
-            updateMicIndicator(false);
-            if (isRacing && !hasPlayerFinished) recognition.start();
+    function setupRaceRoster() {
+      let selectedBotNames = [...fullBotRoster].sort(() => 0.5 - Math.random()).slice(0, 4);
+      if (Math.random() < 0.05) {
+        if (selectedBotNames.length > 3) selectedBotNames.pop();
+        selectedBotNames.push("Ron-Tron");
+      }
+      bots = selectedBotNames.map((name, index) => {
+        let rangeMin = 215; let rangeMax = 245; let color = '#64748b';
+        if (name === "Ron-Tron") { rangeMin = 265; rangeMax = 345; color = '#f43f5e'; }
+        return {
+          id: index + 1,
+          name: name,
+          color: color,
+          progress: 0,
+          targetWpm: rangeMin + Math.random() * (rangeMax - rangeMin),
+          currentLiveWpm: 0,
+          startTime: null,
+          finished: false,
+          isRonTron: name === "Ron-Tron"
         };
+      });
+    }
 
-        function playAgain() {
-            currentWordIndex = 0;
-            startTime = null;
-            isRacing = false;
-            hasPlayerFinished = false;
-            playerFinalWpm = 0;
-            cancelAnimationFrame(gameLoopReq);
-            document.getElementById('resultsPage').classList.remove('active');
-            startCountdown();
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    function updateMicIndicator(active) {
+      const dot = document.getElementById('micDot');
+      const label = document.getElementById('micLabel');
+      if (active) {
+        dot.classList.replace('bg-red-500', 'bg-green-500');
+        dot.classList.add('animate-ping');
+        label.innerText = 'Microphone: Active';
+        label.classList.replace('text-red-500', 'text-green-500');
+      } else {
+        dot.classList.replace('bg-green-500', 'bg-red-500');
+        dot.classList.remove('animate-ping');
+        label.innerText = 'Microphone: Disabled';
+        label.classList.replace('text-green-500', 'text-red-500');
+      }
+    }
+
+    recognition.onstart = () => updateMicIndicator(true);
+    recognition.onend = () => {
+      updateMicIndicator(false);
+      if (isRacing && !hasPlayerFinished) recognition.start();
+    };
+
+    function playAgain() {
+      currentWordIndex = 0;
+      startTime = null;
+      isRacing = false;
+      hasPlayerFinished = false;
+      playerFinalWpm = 0;
+      cancelAnimationFrame(gameLoopReq);
+      document.getElementById('resultsPage').classList.remove('active');
+      startCountdown();
+    }
+
+    function startCountdown() {
+      document.getElementById('introPage').classList.remove('active');
+      document.getElementById('gamePage').classList.add('active');
+      document.getElementById('textDisplayArea').classList.remove('visible');
+      setupRaceRoster();
+      initTrack();
+      renderText();
+      const cdEl = document.getElementById('countdown');
+      cdEl.style.display = 'block';
+      let count = 3;
+      cdEl.innerText = count;
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) cdEl.innerText = count;
+        else if (count === 0) {
+          cdEl.innerText = "GO!";
+          setTimeout(() => {
+            clearInterval(interval);
+            cdEl.style.display = 'none';
+            beginActualRace();
+          }, 500);
         }
+      }, 1000);
+    }
 
-        function startCountdown() {
-            document.getElementById('introPage').classList.remove('active');
-            document.getElementById('gamePage').classList.add('active');
-            document.getElementById('textDisplayArea').classList.remove('visible');
-            setupRaceRoster();
-            initTrack();
-            renderText();
-            const cdEl = document.getElementById('countdown');
-            cdEl.style.display = 'block';
-            let count = 3;
-            cdEl.innerText = count;
-            const interval = setInterval(() => {
-                count--;
-                if (count > 0) cdEl.innerText = count;
-                else if (count === 0) cdEl.innerText = "GO!";
-                else {
-                    clearInterval(interval);
-                    cdEl.style.display = 'none';
-                    beginActualRace();
-                }
-            }, 1000);
+    function beginActualRace() {
+      document.getElementById('textDisplayArea').classList.add('visible');
+      startTime = new Date();
+      bots.forEach(b => b.startTime = startTime);
+      isRacing = true;
+      recognition.start();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function initTrack() {
+      const container = document.getElementById('lanesContainer');
+      const entities = [{ id: 0, name: 'You', color: '#22c55e', icon: CAR_SVG }, ...bots.map(b => ({ ...b, icon: b.isRonTron ? ROCKET_SVG : CAR_SVG }))];
+      container.innerHTML = entities.map(e => `
+        <div class="track-lane">
+          <div class="lane-main">
+            <div id="car-${e.id}" class="car-container absolute" style="color: ${e.color}; left: 0;">
+              ${e.icon}
+              <span class="nametag">${e.name}</span>
+            </div>
+          </div>
+          <div class="wpm-display-lane" style="color: ${e.color}">
+            <span id="wpm-track-${e.id}">0</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderText() {
+      const container = document.getElementById('textContent');
+      container.innerHTML = words.map((w, i) => {
+        let className = '';
+        if (i < currentWordIndex) className = 'word-complete';
+        else if (i === currentWordIndex) className = 'word-active';
+        return `<span id="word-${i}" class="${className}">${w}</span>`;
+      }).join(' ');
+      updateScrollPosition();
+    }
+
+    function updateScrollPosition() {
+      const activeWord = document.getElementById(`word-${currentWordIndex}`);
+      if (activeWord) {
+        const container = document.getElementById('textDisplayArea');
+        const content = document.getElementById('textContent');
+        const targetY = Math.min(0, (container.offsetHeight / 2) - activeWord.offsetTop - (activeWord.offsetHeight / 2));
+        content.style.transform = `translateY(${targetY}px)`;
+      }
+    }
+
+    function calculateWPM(wordCount, start) {
+      if (!start || wordCount === 0) return 0;
+      return Math.round(wordCount / ((new Date() - start) / 60000));
+    }
+
+    recognition.onresult = (event) => {
+      if (!isRacing || hasPlayerFinished) return;
+
+      const latestResult = event.results[event.results.length - 1];
+      const transcript = latestResult[0].transcript.toLowerCase().trim();
+      const cleanInput = transcript.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+      const isFinal = latestResult.isFinal;
+
+      const target = words[currentWordIndex].toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+      const currentWordEl = document.getElementById(`word-${currentWordIndex}`);
+
+      if (cleanInput.includes(target) || (isFinal && cleanInput.split(/\s+/).some(word => word === target))) {
+        currentWordIndex++;
+        if (currentWordEl) currentWordEl.classList.remove('word-wrong');
+        renderText();
+        if (currentWordIndex >= words.length) handlePlayerFinish();
+      }
+      else if (isFinal && currentWordEl && !currentWordEl.classList.contains('word-wrong')) {
+        currentWordEl.classList.add('word-wrong');
+        currentWordEl.classList.remove('word-active');
+      }
+    };
+
+    function gameLoop(timestamp) {
+      updateBotPosition(0, currentWordIndex / words.length);
+      bots.forEach(bot => {
+        if (!bot.finished) {
+          bot.progress += (bot.targetWpm / 60 / 60) / words.length;
+          if (bot.progress >= 1) {
+            bot.progress = 1;
+            bot.finished = true;
+            bot.currentLiveWpm = calculateWPM(words.length, bot.startTime);
+          } else {
+            bot.currentLiveWpm = calculateWPM(bot.progress * words.length, bot.startTime);
+          }
+          updateBotPosition(bot.id, bot.progress);
         }
+      });
 
-        function beginActualRace() {
-            document.getElementById('textDisplayArea').classList.add('visible');
-            startTime = new Date();
-            bots.forEach(b => b.startTime = startTime);
-            isRacing = true;
-            recognition.start();
-            requestAnimationFrame(gameLoop);
-        }
+      if (timestamp - lastUiUpdateTime >= UI_UPDATE_INTERVAL) {
+        lastUiUpdateTime = timestamp;
+        const playerWpm = calculateWPM(currentWordIndex, startTime);
+        const finalPledge = hasPlayerFinished ? playerFinalWpm : playerWpm;
+        document.getElementById(`wpm-track-0`).innerText = finalPledge;
+        document.getElementById(`playerWpmCounter`).innerText = finalPledge;
+        bots.forEach(bot => {
+          document.getElementById(`wpm-track-${bot.id}`).innerText = bot.currentLiveWpm;
+        });
+        if (document.getElementById('resultsPage').classList.contains('active')) renderFinalResultsTable();
+      }
 
-        function initTrack() {
-            const container = document.getElementById('lanesContainer');
-            const entities = [{ id: 0, name: 'You', color: '#22c55e', icon: CAR_SVG }, ...bots.map(b => ({ ...b, icon: b.isRonTron ? ROCKET_SVG : CAR_SVG }))];
-            container.innerHTML = entities.map(e => `
-                <div class="track-lane">
-                    <div class="lane-main">
-                        <div id="car-${e.id}" class="car-container absolute" style="color: ${e.color}; left: 0;">
-                            ${e.icon}
-                            <span class="nametag">${e.name}</span>
-                        </div>
-                    </div>
-                    <div class="wpm-display-lane" style="color: ${e.color}">
-                        <span id="wpm-track-${e.id}">0</span>
-                    </div>
+      if (hasPlayerFinished && bots.every(b => b.finished)) {
+        renderFinalResultsTable();
+        cancelAnimationFrame(gameLoopReq);
+        return;
+      }
+
+      gameLoopReq = requestAnimationFrame(gameLoop);
+    }
+
+    function updateBotPosition(id, progress) {
+      const car = document.getElementById(`car-${id}`);
+      if (car) car.style.left = `calc(${progress * 100}% - ${progress > 0 ? progress * 44 : 0}px)`;
+    }
+
+    function testInstantFinish() {
+      if (isRacing && !hasPlayerFinished) {
+        currentWordIndex = words.length;
+        handlePlayerFinish();
+      }
+    }
+
+    function handlePlayerFinish() {
+      hasPlayerFinished = true;
+      isRacing = false;
+      recognition.stop();
+      playerFinalWpm = calculateWPM(words.length, startTime);
+      document.getElementById('gamePage').classList.remove('active');
+      document.getElementById('resultsPage').classList.add('active');
+      renderFinalResultsTable();
+    }
+
+    function renderFinalResultsTable() {
+      const rawResults = [{ name: "You", wpm: playerFinalWpm, progress: 100, isPlayer: true }, ...bots.map(b => ({ name: b.name, wpm: b.currentLiveWpm, progress: Math.min(Math.round(b.progress * 100), 100), isPlayer: false, isRonTron: b.isRonTron }))].sort((a, b) => (a.progress !== b.progress) ? b.progress - a.progress : b.wpm - a.wpm);
+      document.getElementById('leaderboard').innerHTML = rawResults.map((res, idx) => {
+        const isWinner = idx === 0;
+        const accentColor = res.isRonTron ? '#ff3131' : (isWinner ? '#fbbf24' : '#64748b');
+        return `
+          <div class="result-card p-4 rounded-2xl bg-slate-900/40 border border-slate-800" style="color: ${accentColor}">
+            <div class="result-progress-bg" style="width: ${res.progress}%"></div>
+            <div class="result-content">
+              <div class="flex items-center gap-5">
+                <span class="font-black text-xl ${isWinner ? 'text-yellow-400' : 'text-slate-500'}">#${idx + 1}</span>
+                <div>
+                  <p class="font-black text-base ${res.isRonTron ? 'neon-burn' : (res.isPlayer ? 'text-green-400' : 'text-white')}">${res.name}</p>
+                  <p class="text-[8px] text-slate-500 font-bold uppercase">${res.progress}% Completion</p>
                 </div>
-            `).join('');
-        }
-
-        function renderText() {
-            const container = document.getElementById('textContent');
-            container.innerHTML = words.map((w, i) => `<span id="word-${i}" class="${i < currentWordIndex ? 'word-complete' : i === currentWordIndex ? 'word-active' : ''}">${w}</span>`).join(' ');
-            updateScrollPosition();
-        }
-
-        function updateScrollPosition() {
-            const activeWord = document.getElementById(`word-${currentWordIndex}`);
-            if (activeWord) {
-                const container = document.getElementById('textDisplayArea');
-                const content = document.getElementById('textContent');
-                const targetY = Math.min(0, (container.offsetHeight / 2) - activeWord.offsetTop - (activeWord.offsetHeight / 2));
-                content.style.transform = `translateY(${targetY}px)`;
-            }
-        }
-
-        function calculateWPM(wordCount, start) {
-            if (!start || wordCount === 0) return 0;
-            return Math.round(wordCount / ((new Date() - start) / 60000));
-        }
-
-        recognition.onresult = (event) => {
-            if (!isRacing || hasPlayerFinished) return;
-            const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-            const cleanInput = transcript.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").trim();
-            const detectedWords = cleanInput.split(/\s+/);
-            const target = words[currentWordIndex].toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
-
-            if (detectedWords.some(dw => dw === target)) {
-                currentWordIndex++;
-                renderText();
-                if (currentWordIndex >= words.length) handlePlayerFinish();
-            }
-        };
-
-        function gameLoop(timestamp) {
-            updateBotPosition(0, currentWordIndex / words.length);
-            bots.forEach(bot => {
-                if (!bot.finished) {
-                    bot.progress += (bot.targetWpm / 60 / 60) / words.length;
-                    if (bot.progress >= 1) { bot.progress = 1; bot.finished = true; bot.currentLiveWpm = calculateWPM(words.length, bot.startTime); }
-                    else { bot.currentLiveWpm = calculateWPM(bot.progress * words.length, bot.startTime); }
-                    updateBotPosition(bot.id, bot.progress);
-                }
-            });
-
-            if (timestamp - lastUiUpdateTime >= UI_UPDATE_INTERVAL) {
-                lastUiUpdateTime = timestamp;
-                const playerWpm = calculateWPM(currentWordIndex, startTime);
-                const finalPledge = hasPlayerFinished ? playerFinalWpm : playerWpm;
-                document.getElementById(`wpm-track-0`).innerText = finalPledge;
-                document.getElementById(`playerWpmCounter`).innerText = finalPledge;
-                bots.forEach(bot => { document.getElementById(`wpm-track-${bot.id}`).innerText = bot.currentLiveWpm; });
-                if (document.getElementById('resultsPage').classList.contains('active')) renderFinalResultsTable();
-            }
-            
-            if (hasPlayerFinished && bots.every(b => b.finished)) {
-                renderFinalResultsTable();
-                cancelAnimationFrame(gameLoopReq);
-                return;
-            }
-            gameLoopReq = requestAnimationFrame(gameLoop);
-        }
-
-        function updateBotPosition(id, progress) {
-            const car = document.getElementById(`car-${id}`);
-            if (car) car.style.left = `calc(${progress * 100}% - ${progress > 0 ? progress * 44 : 0}px)`;
-        }
-
-        function testInstantFinish() { if (isRacing && !hasPlayerFinished) { currentWordIndex = words.length; handlePlayerFinish(); } }
-
-        function handlePlayerFinish() {
-            hasPlayerFinished = true;
-            isRacing = false;
-            recognition.stop();
-            playerFinalWpm = calculateWPM(words.length, startTime);
-            document.getElementById('gamePage').classList.remove('active');
-            document.getElementById('resultsPage').classList.add('active');
-            renderFinalResultsTable();
-        }
-
-        function renderFinalResultsTable() {
-            const rawResults = [{ name: "You", wpm: playerFinalWpm, progress: 100, isPlayer: true }, ...bots.map(b => ({ name: b.name, wpm: b.currentLiveWpm, progress: Math.min(Math.round(b.progress * 100), 100), isPlayer: false, isRonTron: b.isRonTron }))].sort((a, b) => (a.progress !== b.progress) ? b.progress - a.progress : b.wpm - a.wpm);
-            document.getElementById('leaderboard').innerHTML = rawResults.map((res, idx) => {
-                const isWinner = idx === 0;
-                const accentColor = res.isRonTron ? '#ff3131' : (isWinner ? '#fbbf24' : '#64748b');
-                return `
-                    <div class="result-card p-4 rounded-2xl bg-slate-900/40 border border-slate-800" style="color: ${accentColor}">
-                        <div class="result-progress-bg" style="width: ${res.progress}%"></div>
-                        <div class="result-content">
-                            <div class="flex items-center gap-5">
-                                <span class="font-black text-xl ${isWinner ? 'text-yellow-400' : 'text-slate-500'}">#${idx + 1}</span>
-                                <div>
-                                    <p class="font-black text-base ${res.isRonTron ? 'neon-burn' : (res.isPlayer ? 'text-green-400' : 'text-white')}">${res.name}</p>
-                                    <p class="text-[8px] text-slate-500 font-bold uppercase">${res.progress}% Completion</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-2xl font-black ${res.isRonTron ? 'neon-burn' : 'text-white'}">${res.wpm}</span>
-                                <p class="text-[8px] text-slate-500 font-bold uppercase">WPM</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    </script>
+              </div>
+              <div class="text-right">
+                <span class="text-2xl font-black ${res.isRonTron ? 'neon-burn' : 'text-white'}">${res.wpm}</span>
+                <p class="text-[8px] text-slate-500 font-bold uppercase">WPM</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
 </body>
 </html>
